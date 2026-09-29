@@ -13,6 +13,8 @@ from app.services.quality_service import quality_service_instance
 from app.services.binary_service import binary_service_instance
 from app.services.disease_service import disease_service_instance
 from app.services.translation_service import translation_service_instance
+from app.services.genai_service import genai_service_instance
+from app.data.disease_info import DISEASE_CATALOG
 
 router = APIRouter()
 
@@ -87,6 +89,16 @@ async def diagnose_crop_image(
 
     # 5. Step 3 & 4: Stage 2 Disease Detection & Farmer Guidance
     disease_result = disease_service_instance.diagnose(pil_img, tomato_conf=tomato_confidence)
+    disease_info = DISEASE_CATALOG.get(disease_result.get("raw_class"), disease_result)
+    ai_summary = genai_service_instance.generate_response(
+        query=(
+            f"Give a concise farmer-friendly summary for {disease_result.get('common_name', 'this tomato disease')} "
+            "with the likely symptoms, immediate action, and prevention advice."
+        ),
+        disease_info=disease_info,
+        intent="diagnosis",
+        language=lang,
+    )
 
     # Localize response if target language is requested
     disease_name = disease_result["common_name"]
@@ -130,5 +142,6 @@ async def diagnose_crop_image(
         "chemical_treatment": chemical_treatment,
         "prevention": prevention,
         "action_plan": action_plan,
-        "top_predictions": disease_result.get("top_predictions", [])
+        "top_predictions": disease_result.get("top_predictions", []),
+        "ai_summary": ai_summary
     }

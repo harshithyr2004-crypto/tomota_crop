@@ -23,6 +23,7 @@ class PredictionController {
         this.gaugeValue = document.getElementById('gaugeValue');
         this.confidenceFill = document.getElementById('confidenceFill');
         this.probList = document.getElementById('probList');
+        this.aiSummaryText = document.getElementById('aiSummaryText');
         
         // DOM Elements - Dedicated Advisory Page
         this.advisoryActionToday = document.getElementById('advisoryActionToday');
@@ -208,6 +209,10 @@ class PredictionController {
                     this.probList.appendChild(row);
                 });
             }
+        }
+
+        if (this.aiSummaryText) {
+            this.aiSummaryText.textContent = data.ai_summary || `Detected ${data.disease}. Review the action plan and treatment guidance below.`;
         }
 
         // Update Dedicated Farmer Guidance Hub Page
