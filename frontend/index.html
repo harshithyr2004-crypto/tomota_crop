@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TomatoGuard AI | Two-Stage Crop Health & Disease Diagnostic Portal</title>
+    <meta name="description" content="AI-Powered Two-Stage Tomato Crop Verification and Disease Diagnosis Portal with Multi-Page Navigation and Agronomy Advisory.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Background Ambient Light Glows -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- MAIN APP NAVIGATION BAR -->
+    <header class="app-header">
+        <div class="container nav-container">
+            <div class="logo-group">
+                <div class="logo-icon">🍅</div>
+                <div class="logo-text">
+                    <span class="logo-title">TomatoGuard AI</span>
+                    <span class="logo-subtitle">Smart Crop Health Assistant</span>
+                </div>
+            </div>
+
+            <!-- Multi-Page Navigation Menu (Visible When Logged In) -->
+            <nav class="main-nav" id="mainNav">
+                <button type="button" class="nav-link active" data-target="page-scanner">
+                    <span class="nav-icon">🌿</span> <span>Scanner & AI</span>
+                </button>
+                <button type="button" class="nav-link" data-target="page-advisory">
+                    <span class="nav-icon">📋</span> <span>Farmer Guidance</span>
+                </button>
+                <button type="button" class="nav-link" data-target="page-assistant">
+                    <span class="nav-icon">🤖</span> <span>Ask AI Advisor</span>
+                </button>
+                <button type="button" class="nav-link" data-target="page-history">
+                    <span class="nav-icon">📊</span> <span>Scan Records</span>
+                </button>
+                <button type="button" class="nav-link" data-target="page-catalog">
+                    <span class="nav-icon">📚</span> <span>Disease Library</span>
+                </button>
+            </nav>
+            
+            <div class="nav-controls">
+                <!-- Language Selector -->
+                <div class="language-picker-wrapper">
+                    <span class="lang-icon">🌐</span>
+                    <select id="languageSelect" class="language-select" aria-label="Select Language">
+                        <option value="en">English</option>
+                        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                        <option value="hi">हिन्दी (Hindi)</option>
+                        <option value="te">తెలుగు (Telugu)</option>
+                        <option value="ta">தமிழ் (Tamil)</option>
+                        <option value="ml">മലയാളം (Malayalam)</option>
+                        <option value="mr">मराठी (Marathi)</option>
+                        <option value="bn">বাংলা (Bengali)</option>
+                        <option value="gu">ગુજરાતી (Gujarati)</option>
+                        <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    </select>
+                </div>
+
+                <!-- User Profile Pill & Logout (Logged In State) -->
+                <div class="user-profile-pill hidden" id="userProfilePill">
+                    <span class="user-avatar">👨‍🌾</span>
+                    <span class="user-name" id="userNameDisplay">Farmer</span>
+                    <button type="button" class="logout-btn" id="logoutBtn" title="Log Out">Logout</button>
+                </div>
+
+                <a href="/docs" target="_blank" class="nav-btn api-docs-btn" title="Open API Documentation">
+                    <span>API Docs</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- 1. AUTHENTICATION VIEW (LOGIN / SIGN UP SCREEN) -->
+    <!-- ========================================================================= -->
+    <div class="auth-wrapper container" id="authContainer">
+        <div class="auth-card glass-panel">
+            <div class="auth-header">
+                <div class="auth-logo">🍅</div>
+                <h2>Welcome to TomatoGuard AI</h2>
+                <p>Sign in or use demo access to start two-stage crop health diagnosis.</p>
+            </div>
+
+            <!-- Auth Tabs -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="tabLoginBtn">Sign In</button>
+                <button type="button" class="auth-tab-btn" id="tabSignupBtn">Register Farm</button>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Farmer / Username</label>
+                    <input type="text" id="loginUsername" class="form-input" placeholder="e.g. Ramesh Kumar or demo" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Sign In to Dashboard</button>
+            </form>
+
+            <!-- Signup Form (Hidden by default) -->
+            <form class="auth-form hidden" id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" class="form-input" placeholder="e.g. Ramesh Kumar">
+                </div>
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" class="form-input" placeholder="e.g. ramesh_farm">
+                </div>
+                <div class="form-group">
+                    <label for="signupLocation">Farm Location (District / State)</label>
+                    <input type="text" id="signupLocation" class="form-input" placeholder="e.g. Kolar, Karnataka">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" class="form-input" placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">Create Account</button>
+            </form>
+
+            <!-- Quick Demo One-Click Access -->
+            <div class="demo-access-divider">
+                <span>OR</span>
+            </div>
+            <button type="button" class="btn btn-demo" id="quickDemoBtn">
+                <span>⚡ Instant Demo Access (One-Click)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2. AUTHENTICATED WORKING DASHBOARD (MULTI-PAGE SPA CONTAINER) -->
+    <!-- ========================================================================= -->
+    <div class="app-container hidden" id="appContainer">
+        <!-- ----------------------------------------------------------------- -->
+        <!-- PAGE 1: SCANNER & TWO-STAGE AI DIAGNOSTICS -->
+        <!-- ----------------------------------------------------------------- -->
+        <div class="app-page active" id="page-scanner">
+            <div class="container">
+                <!-- Hero Intro Banner -->
+                <section class="hero-section">
+                    <div class="hero-badge">🛡️ Two-Stage Gated Neural Pipeline</div>
+                    <h1 class="hero-title" data-i18n="Protect Your Tomato Crop With AI">Protect Your Tomato Crop With AI</h1>
+                    <p class="hero-desc" data-i18n="Capture or upload a tomato leaf to identify possible diseases and receive practical guidance.">
+                        Capture or upload a leaf image. Stage 1 MobileNetV2 verifies tomato authenticity; Stage 2 deep CNN identifies foliar diseases.
+                    </p>
+                </section>
+
+                <!-- Visual 4-Step Pipeline Bar -->
+                <div class="pipeline-progress-bar glass-panel">
+                    <div class="pipeline-step" id="pipeStep1">
+                        <div class="step-circle">1</div>
+                        <div class="step-info">
+                            <span class="step-title">STEP 1</span>
+                            <span class="step-sub">Image Check</span>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">➔</div>
+                    <div class="pipeline-step" id="pipeStep2">
+                        <div class="step-circle">2</div>
+                        <div class="step-info">
+                            <span class="step-title">STEP 2</span>
+                            <span class="step-sub">Tomato Gate</span>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">➔</div>
+                    <div class="pipeline-step" id="pipeStep3">
+                        <div class="step-circle">3</div>
+                        <div class="step-info">
+                            <span class="step-title">STEP 3</span>
+                            <span class="step-sub">Disease AI</span>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">➔</div>
+                    <div class="pipeline-step" id="pipeStep4">
+                        <div class="step-circle">4</div>
+                        <div class="step-info">
+                            <span class="step-title">STEP 4</span>
+                            <span class="step-sub">Farmer Guidance</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scanner & Output Grid -->
+                <div class="workspace-grid">
+                    <!-- Left: Scanner Viewport & Camera -->
+                    <div class="left-column">
+                        <section class="scanner-card glass-panel">
+                            <div class="card-header">
+                                <h2><span class="icon">📷</span> Leaf Image Scanner</h2>
+                                <span class="chip">MobileNetV2 + CNN</span>
+                            </div>
+
+                            <!-- Scanner Mode Switch -->
+                            <div class="scanner-mode-switch">
+                                <button type="button" class="mode-tab active" id="modeUploadBtn">
+                                    <span>🖼️</span> <span data-i18n="Upload Leaf Image">Upload Image</span>
+                                </button>
+                                <button type="button" class="mode-tab" id="modeCameraBtn">
+                                    <span>📷</span> <span data-i18n="Scan With Camera">Scan With Camera</span>
+                                </button>
+                            </div>
+
+                            <!-- Dropzone Picker -->
+                            <div class="dropzone" id="dropzone">
+                                <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/jpg" class="file-input">
+                                <div class="dropzone-content" id="dropzonePrompt">
+                                    <div class="upload-icon-wrapper">
+                                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    </div>
+                                    <p class="dropzone-title">Drag & drop tomato leaf image here</p>
+                                    <p class="dropzone-subtitle">or <button type="button" class="browse-btn" id="browseBtn">Browse Files</button></p>
+                                    <span class="supported-formats">JPG, PNG, WEBP (Auto-Analyzed)</span>
+                                </div>
+
+                                <!-- Image Preview & Scanning Laser -->
+                                <div class="preview-container hidden" id="previewContainer">
+                                    <img id="imagePreview" src="" alt="Selected leaf preview">
+                                    <div class="scanner-laser" id="scannerLaser"></div>
+                                    <button type="button" class="remove-btn" id="removeImgBtn" title="Remove image">✕</button>
+                                </div>
+                            </div>
+
+                            <!-- Live Camera Viewport -->
+                            <div class="camera-viewport-container hidden" id="cameraViewportContainer">
+                                <div class="camera-stream-wrapper">
+                                    <video id="cameraVideo" autoplay playsinline muted></video>
+                                    <canvas id="cameraCanvas" class="hidden"></canvas>
+                                    <div class="camera-target-reticle"></div>
+                                </div>
+                                <div class="camera-controls">
+                                    <button type="button" class="btn btn-secondary" id="switchCameraBtn">🔄 Lens</button>
+                                    <button type="button" class="btn btn-capture" id="captureBtn">📸 Snap Photo</button>
+                                    <button type="button" class="btn btn-secondary" id="closeCameraBtn">✕ Close</button>
+                                </div>
+                            </div>
+
+                            <!-- Action Trigger Button -->
+                            <button type="button" class="btn btn-primary" id="diagnoseBtn" disabled>
+                                <span class="btn-text">Run Two-Stage AI Diagnosis</span>
+                                <span class="spinner hidden" id="btnSpinner"></span>
+                            </button>
+
+                            <!-- One-Click Samples -->
+                            <div class="quick-samples-section">
+                                <div class="section-label">
+                                    <span>🧪 One-Click Test Leaves (Tomato & Non-Tomato):</span>
+                                </div>
+                                <div class="samples-scroll-grid" id="samplesContainer">
+                                    <div class="sample-skeleton">Loading samples...</div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Right: Results Card -->
+                    <div class="right-column">
+                        <section class="results-card glass-panel" id="resultsCard">
+                            <div class="card-header">
+                                <h2><span class="icon">🔬</span> Diagnostic Result</h2>
+                                <span class="chip" id="severityBadge">Awaiting Scan</span>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div class="empty-state" id="emptyState">
+                                <div class="empty-icon">🍃</div>
+                                <h3>No Leaf Analyzed Yet</h3>
+                                <p>Select a leaf sample on the left or upload an image to view two-stage verification and disease metrics.</p>
+                            </div>
+
+                            <!-- NON-TOMATO REJECTION CARD (CRITICAL GATE) -->
+                            <div class="non-tomato-rejection-card hidden" id="nonTomatoCard">
+                                <div class="rejection-badge">
+                                    <span class="alert-icon">⚠️</span>
+                                    <span class="rejection-title" data-i18n="NOT A TOMATO CROP">NOT A TOMATO CROP</span>
+                                </div>
+                                <h3 class="rejection-heading" data-i18n="This image does not appear to belong to the tomato crop.">This image does not appear to belong to the tomato crop.</h3>
+                                <p class="rejection-desc" data-i18n="Please upload or capture a clear image of a tomato leaf.">
+                                    Please upload or capture a clear image of a tomato leaf.
+                                </p>
+                                <div class="rejection-confidence-box">
+                                    <div class="rej-conf-label">Stage 1 Tomato Confidence:</div>
+                                    <div class="rej-conf-val" id="nonTomatoConfidence">0.0%</div>
+                                    <div class="rej-conf-note">Required Gate Threshold: ≥ 75.0%</div>
+                                </div>
+                                <div class="rejection-guide-box">
+                                    <h4>Supported Input:</h4>
+                                    <ul>
+                                        <li>✓ Verified tomato leaf or foliage images</li>
+                                        <li>✗ Unrelated objects (cars, animals, buildings, people) are safely rejected</li>
+                                        <li>✗ Other plant foliage (rice, wheat, potato, apple) is rejected</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Quality Failure Card -->
+                            <div class="quality-failure-card hidden" id="qualityFailCard">
+                                <div class="alert-badge">⚠️ Image Quality Low</div>
+                                <h3 id="qualityFailReason">Image is unreadable or too dark.</h3>
+                                <p id="qualityFailSuggestion">Please capture a clear, well-lit photo of the leaf surface.</p>
+                            </div>
+
+                            <!-- Valid Tomato Diagnosis Card -->
+                            <div class="diagnosis-content hidden" id="diagnosisContent">
+                                <div class="diagnosis-banner" id="diagnosisBanner">
+                                    <div class="banner-top">
+                                        <div>
+                                            <div class="verified-tag">
+                                                <span class="check-icon">✅</span>
+                                                <span data-i18n="Tomato Crop Verified">Tomato Crop Verified</span>
+                                                <span class="tomato-conf-pill" id="bannerTomatoConf">99% Tomato</span>
+                                            </div>
+                                            <h3 class="diagnosis-name" id="diagnosisName">-</h3>
+                                            <p class="pathogen-name" id="pathogenName">Pathogen: -</p>
+                                        </div>
+                                        <div class="health-score-container">
+                                            <div class="health-score-circle" id="healthScoreCircle">
+                                                <span class="health-score-num" id="healthScoreValue">85</span>
+                                                <span class="health-score-max">/100</span>
+                                            </div>
+                                            <div class="health-score-label" data-i18n="Crop Health Score">Crop Health Score</div>
+                                            <div class="health-score-sub">AI-based indication</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Confidence Meter -->
+                                    <div class="confidence-section">
+                                        <div class="conf-labels">
+                                            <span>Disease Confidence</span>
+                                            <span class="gauge-value" id="gaugeValue">0%</span>
+                                        </div>
+                                        <div class="confidence-track">
+                                            <div class="confidence-fill" id="confidenceFill" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Probability Breakdown -->
+                                <div class="prob-breakdown-card">
+                                    <h4>Top Probability Predictions</h4>
+                                    <div class="prob-list" id="probList"></div>
+                                </div>
+
+                                <!-- Quick Navigation Link to Guidance Page -->
+                                <div class="quick-guidance-banner">
+                                    <div>
+                                        <strong>Full Advisory Generated:</strong> Complete symptoms, organic/chemical treatment, and farmer action timeline are ready.
+                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="viewFullAdvisoryBtn">
+                                        View Farmer Guidance ➔
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ----------------------------------------------------------------- -->
+        <!-- PAGE 2: FARMER GUIDANCE & ACTION HUB -->
+        <!-- ----------------------------------------------------------------- -->
+        <div class="app-page" id="page-advisory">
+            <div class="container">
+                <section class="page-header-card glass-panel">
+                    <div class="card-header">
+                        <h2><span class="icon">📋</span> Farmer Agronomy & Treatment Hub</h2>
+                        <span class="chip">Action Protocols</span>
+                    </div>
+                    <p class="page-header-desc">
+                        Comprehensive organic remedies, responsible chemical medications, and time-sequenced farmer action schedules.
+                    </p>
+                </section>
+
+                <div class="advisory-page-grid">
+                    <!-- Action Plan Timeline Card -->
+                    <div class="glass-panel action-plan-card">
+                        <div class="card-subtitle-row">
+                            <h3 data-i18n="Farmer Action Plan">📋 Farmer Action Plan</h3>
+                            <span class="badge-timeline">Time-Sequenced</span>
+                        </div>
+                        <div class="action-timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker today">TODAY</div>
+                                <div class="timeline-content" id="advisoryActionToday">Inspect field and prune severely infected lower leaves.</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker next3">NEXT 3 DAYS</div>
+                                <div class="timeline-content" id="advisoryActionNext3">Apply targeted protective spray early in the morning.</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker week">THIS WEEK</div>
+                                <div class="timeline-content" id="advisoryActionWeek">Sanitize pruning equipment and improve row air circulation.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Symptoms Card -->
+                    <div class="glass-panel">
+                        <div class="card-header">
+                            <h3><span class="icon">🔍</span> <span data-i18n="Symptoms">Symptoms & Identification</span></h3>
+                        </div>
+                        <ul class="advisory-list" id="advisorySymptomsList">
+                            <li>Run a leaf scan to load pathology symptoms.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Organic Remedies Card -->
+                    <div class="glass-panel">
+                        <div class="card-header">
+                            <h3><span class="icon">🌿</span> <span data-i18n="Treatment">Organic & Bio-Control Remedies</span></h3>
+                        </div>
+                        <ul class="advisory-list" id="advisoryOrganicList">
+                            <li>Run a leaf scan to load organic recommendations.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Chemical Control Card -->
+                    <div class="glass-panel">
+                        <div class="card-header">
+                            <h3><span class="icon">💊</span> <span data-i18n="Medication">Chemical Medications & Dosage Guidelines</span></h3>
+                        </div>
+                        <ul class="advisory-list" id="advisoryChemicalList">
+                            <li>Run a leaf scan to load approved chemical formulations.</li>
+                        </ul>
+                        <div class="advisory-warning">
+                            ⚠️ Adhere strictly to the product label instructions and observe required pre-harvest intervals (PHI).
+                        </div>
+                    </div>
+
+                    <!-- Prevention Card -->
+                    <div class="glass-panel full-width-card">
+                        <div class="card-header">
+                            <h3><span class="icon">🛡️</span> <span data-i18n="Prevention">Long-Term Agronomy Prevention</span></h3>
+                        </div>
+                        <ul class="advisory-list" id="advisoryPreventionList">
+                            <li>Practice 2-3 year crop rotation away from solanaceous crops.</li>
+                            <li>Utilize drip irrigation to keep leaf canopies dry.</li>
+                            <li>Space plants at least 50-60cm apart for optimal airflow.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ----------------------------------------------------------------- -->
+        <!-- PAGE 3: ASK TOMATOGUARD AI ASSISTANT -->
+        <!-- ----------------------------------------------------------------- -->
+        <div class="app-page" id="page-assistant">
+            <div class="container">
+                <section class="assistant-page-card glass-panel">
+                    <div class="card-header">
+                        <h2><span class="icon">🤖</span> <span data-i18n="Ask TomatoGuard">Ask TomatoGuard AI Agronomy Assistant</span></h2>
+                        <span class="chip">AI Advisor</span>
+                    </div>
+                    <p class="page-header-desc">
+                        Ask any agricultural question regarding symptoms, organic solutions, fungicide spray schedules, or fertilizers.
+                    </p>
+
+                    <!-- Preset Question Chips -->
+                    <div class="preset-chips-row">
+                        <span class="chip-label">Quick Questions:</span>
+                        <button type="button" class="preset-chip">How do I spray neem oil?</button>
+                        <button type="button" class="preset-chip">What causes yellow leaves?</button>
+                        <button type="button" class="preset-chip">How to prevent Late Blight?</button>
+                        <button type="button" class="preset-chip">How to control whiteflies?</button>
+                    </div>
+
+                    <!-- Chat Log Box -->
+                    <div class="assistant-chat-box large-chat-box" id="assistantChatBox">
+                        <div class="chat-message bot">
+                            <div class="chat-bubble">
+                                <strong>TomatoGuard AI:</strong> Namaste Farmer! I am your dedicated AI Agronomy Assistant. Ask me anything about tomato crop disease identification, organic remedies, chemical sprays, or prevention practices.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Form -->
+                    <form class="assistant-input-row" id="assistantForm">
+                        <input type="text" id="assistantInput" class="assistant-input" placeholder="Type your crop question here (e.g. What fertilizer should I apply for yellow leaves?)" autocomplete="off">
+                        <button type="submit" class="btn-ask" id="assistantSubmitBtn">Send Query</button>
+                    </form>
+                </section>
+            </div>
+        </div>
+
+        <!-- ----------------------------------------------------------------- -->
+        <!-- PAGE 4: SCAN RECORDS & ANALYTICS -->
+        <!-- ----------------------------------------------------------------- -->
+        <div class="app-page" id="page-history">
+            <div class="container">
+                <section class="history-page-card glass-panel">
+                    <div class="card-header">
+                        <h2><span class="icon">📊</span> Tomato Field Scan Records</h2>
+                        <button type="button" class="clear-history-btn" id="clearHistoryBtn">Clear All Records</button>
+                    </div>
+                    <p class="page-header-desc">
+                        Archived diagnosis reports and health scores from your current diagnostic session.
+                    </p>
+                    <div class="history-grid" id="historyGrid">
+                        <div class="no-history-msg">No previous scans recorded in this session.</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- ----------------------------------------------------------------- -->
+        <!-- PAGE 5: DISEASE ENCYCLOPEDIA & PATHOLOGY LIBRARY -->
+        <!-- ----------------------------------------------------------------- -->
+        <div class="app-page" id="page-catalog">
+            <div class="container">
+                <section class="catalog-page-card glass-panel">
+                    <div class="card-header">
+                        <h2><span class="icon">📚</span> Tomato Crop Pathology Encyclopedia (10 Categories)</h2>
+                        <span class="chip">Full Catalog</span>
+                    </div>
+                    <p class="page-header-desc">
+                        Comprehensive guide to major fungal, bacterial, viral, and pest infestations affecting tomato cultivars.
+                    </p>
+                    <div class="catalog-grid" id="catalogGrid">
+                        <!-- Populated dynamically via /api/classes -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Footer -->
+    <footer class="app-footer">
+        <div class="container footer-content">
+            <p><strong>TomatoGuard AI</strong> &mdash; Production Two-Stage Deep Learning Crop Diagnostic System</p>
+            <p class="tech-stack">MobileNetV2 Transfer Gate &bull; 10-Class CNN Pathology Engine &bull; FastAPI Backend &bull; Multilingual Support</p>
+        </div>
+    </footer>
+
+    <!-- Modular Script Inclusions -->
+    <script src="/static/js/translation.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/camera.js"></script>
+    <script src="/static/js/prediction.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
