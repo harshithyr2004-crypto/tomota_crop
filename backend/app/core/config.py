@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 
 # Base Paths (Points to D:\tomato_crop\tomato-ai-system)
@@ -8,12 +8,12 @@ ML_DIR = BASE_DIR / "ml"
 SAVED_MODELS_DIR = ML_DIR / "saved_models"
 
 # Stage 1: MobileNetV2 Binary Gate Model
-BINARY_MODEL_PATH = SAVED_MODELS_DIR / "tomato_binary.keras"
+BINARY_MODEL_PATH = SAVED_MODELS_DIR / "tomato_binary.tflite"
 BINARY_METADATA_PATH = SAVED_MODELS_DIR / "tomato_binary_class_names.json"
 TOMATO_CONFIDENCE_THRESHOLD = 0.75  # Configurable gate threshold (75%)
 
 # Stage 2: Disease Classifier Model (MobileNetV2 Transfer Learning Engine)
-DISEASE_MODEL_PATH = SAVED_MODELS_DIR / "tomato_disease_mobilenet.keras"
+DISEASE_MODEL_PATH = SAVED_MODELS_DIR / "tomato_disease_mobilenet.tflite"
 DISEASE_ARCHIVE_MODEL_PATH = Path(r"D:\archive\tomato\tomato_disease_model.keras")
 DISEASE_WEIGHTS_PATH = Path(r"D:\archive\tomato\keras_potato_trained_model_weights.weights.h5")
 
