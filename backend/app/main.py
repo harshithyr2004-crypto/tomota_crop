@@ -56,3 +56,8 @@ if STATIC_FRONTEND_DIR.exists():
         if index_file.exists():
             return FileResponse(str(index_file))
         return {"message": "TomatoGuard AI Backend Active. Open /docs for Swagger API."}
+
+
+@app.get('/api/health')
+async def health_check():
+    return {'status': 'healthy', 'service': 'TomatoGuard AI', 'version': '2.0.0'}
