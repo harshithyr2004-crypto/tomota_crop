@@ -1251,3 +1251,88 @@ body {
     .main-nav { width: 100%; overflow-x: auto; padding: 6px; }
     .nav-controls { width: 100%; justify-content: space-between; }
 }
+
+@media (max-width: 600px) {
+    .container { padding-right: 14px; padding-left: 14px; }
+    .app-header { padding: 10px 0; }
+    .nav-container { align-items: stretch; gap: 10px; }
+    .logo-title { font-size: 18px; }
+
+    .main-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+        overflow: visible;
+        border-radius: 12px;
+    }
+
+    .nav-link {
+        justify-content: center;
+        min-width: 0;
+        min-height: 42px;
+        padding: 7px 5px;
+        white-space: normal;
+        text-align: center;
+        font-size: 11px;
+    }
+
+    .nav-link:last-child { grid-column: 1 / -1; }
+    .nav-controls { justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+    .user-profile-pill { max-width: 100%; flex-wrap: wrap; }
+    .nav-btn { min-height: 40px; }
+
+    .app-page { padding: 16px 0 32px; }
+    .glass-panel { padding: 16px; border-radius: 14px; }
+    .page-header-card { margin-bottom: 16px; }
+    .card-header { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+    .card-header h2, .card-header h3 { min-width: 0; font-size: 16px; }
+    .chip { max-width: 100%; white-space: normal; text-align: center; }
+    .page-header-desc { font-size: 13px; }
+
+    .pipeline-progress-bar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 8px;
+        padding: 14px;
+    }
+
+    .pipeline-step { min-width: 0; gap: 7px; }
+    .step-info { min-width: 0; }
+    .step-sub { font-size: 11px; }
+    .pipeline-arrow { display: none; }
+
+    .scanner-mode-switch { gap: 4px; }
+    .mode-tab { min-width: 0; gap: 5px; padding: 9px 5px; font-size: 11px; }
+    .dropzone { min-height: 210px; }
+    .dropzone-content { padding: 14px 8px; }
+    .camera-controls { flex-wrap: wrap; }
+    .camera-controls .btn { width: auto; min-width: 0; min-height: 42px; padding: 10px 8px; font-size: 12px; }
+    .camera-controls .btn-capture { flex: 1.5 !important; }
+    .samples-scroll-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+
+    .banner-top { gap: 12px; }
+    .diagnosis-name { font-size: 20px; overflow-wrap: anywhere; }
+    .health-score-container { padding: 8px 12px; }
+    .prob-item { min-width: 0; gap: 7px; }
+    .prob-name { width: auto; min-width: 0; flex: 0 1 38%; white-space: normal; }
+    .prob-bar-wrapper { min-width: 20px; }
+    .prob-pct { width: 40px; }
+    .ai-summary-box p { overflow-wrap: anywhere; }
+    .quick-guidance-banner { align-items: stretch; flex-direction: column; }
+    .quick-guidance-banner .btn { width: 100%; }
+
+    .advisory-page-grid,
+    .history-grid,
+    .catalog-grid { grid-template-columns: minmax(0, 1fr); }
+    .full-width-card { grid-column: auto; }
+    .card-subtitle-row { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+    .timeline-item { gap: 8px; }
+    .timeline-marker { min-width: 72px; padding: 4px 6px; }
+
+    .preset-chips-row { gap: 6px; }
+    .assistant-chat-box { min-height: 220px; padding: 10px; }
+    .chat-bubble { max-width: 92%; padding: 9px 11px; overflow-wrap: anywhere; }
+    .assistant-input-row { align-items: stretch; }
+    .assistant-input { min-width: 0; padding: 10px; }
+    .btn-ask { flex: 0 0 auto; padding: 0 14px; }
+}
