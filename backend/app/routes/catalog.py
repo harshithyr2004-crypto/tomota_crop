@@ -20,8 +20,8 @@ def health_check():
     return {
         "status": "online",
         "system": "TomatoGuard AI - Production Diagnostic Engine",
-        "stage1_gate_loaded": binary_service_instance.model is not None,
-        "stage2_disease_loaded": disease_service_instance.model is not None,
+        "stage1_gate_loaded": binary_service_instance.interpreter is not None,
+        "stage2_disease_loaded": disease_service_instance.interpreter is not None,
         "supported_classes": len(CLASS_NAMES),
         "gate_threshold": binary_service_instance.threshold
     }

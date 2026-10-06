@@ -47,3 +47,29 @@ def test_assistant_generates_answer_for_explicit_disease(monkeypatch):
     assert captured["intent"] == "prevention"
     assert result["context_disease"] == "Late Blight"
     assert result["response"] == "Grounded test answer"
+
+
+def test_general_fertilizer_question_gets_relevant_answer(monkeypatch):
+    monkeypatch.setattr(genai_service_instance, "api_key", None)
+
+    result = assistant_service_instance.answer_query(
+        "What fertilizer should I use for tomato plants?",
+        current_disease="Tomato___Early_blight",
+    )
+
+    assert result["context_disease"] == "General tomato care"
+    assert "soil test" in result["response"].lower()
+    assert "healthy tomato foliage" not in result["response"].lower()
+
+
+def test_whitefly_question_uses_pest_guidance_not_scan_disease(monkeypatch):
+    monkeypatch.setattr(genai_service_instance, "api_key", None)
+
+    result = assistant_service_instance.answer_query(
+        "How to control whiteflies?",
+        current_disease="Tomato___Early_blight",
+    )
+
+    assert result["context_disease"] == "General tomato care"
+    assert "whiteflies on tomatoes" in result["response"].lower()
+    assert "early blight" not in result["response"].lower()

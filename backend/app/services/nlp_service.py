@@ -21,6 +21,7 @@ class NLPService:
         "symptoms": ["symptom", "symptoms", "identify", "sign", "signs", "look like", "appearance", "lesion", "lesions"],
         "action": ["action", "today", "schedule", "timeline", "step", "what to do", "plan"],
         "diagnosis": ["diagnosis", "diagnose", "disease", "what is this", "what is", "what disease", "problem"],
+        "pest": ["pest", "pests", "insect", "insects", "whitefly", "whiteflies", "white fly", "white flies", "aphid", "aphids", "caterpillar", "caterpillars", "bug", "bugs"],
     }
 
     DISEASE_ALIASES = {
@@ -96,8 +97,9 @@ class NLPService:
         cleaned = self.normalize_text(text)
         language = self.detect_language(cleaned)
         intent = self.detect_intent(cleaned)
-        disease_key = self.detect_disease(cleaned, current_disease)
-        if intent == "general" and disease_key:
+        explicit_disease_key = self.detect_disease(cleaned)
+        disease_key = explicit_disease_key or self.detect_disease("", current_disease)
+        if intent == "general" and explicit_disease_key:
             intent = "diagnosis"
 
         return {
@@ -105,6 +107,7 @@ class NLPService:
             "language": language,
             "intent": intent,
             "disease_key": disease_key,
+            "disease_explicit": explicit_disease_key is not None,
             "cleaned_query": cleaned,
         }
 
