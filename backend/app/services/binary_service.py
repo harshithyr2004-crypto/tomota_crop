@@ -1,10 +1,11 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Stage 1: MobileNetV2 Tomato vs Non-Tomato Verification Gate Service
 LiteRT version for Vercel deployment.
 """
 
 import json
+import threading
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -25,46 +26,56 @@ class TomatoBinaryGateService:
         self.input_details = None
         self.output_details = None
         self.threshold = TOMATO_CONFIDENCE_THRESHOLD
+        self._inference_lock = threading.Lock()
         self._load_model()
 
+    @property
+    def model(self):
+        return self.interpreter
+
     def _load_model(self):
-        if BINARY_MODEL_PATH.exists():
-            try:
-                self.interpreter = Interpreter(
-                    model_path=str(BINARY_MODEL_PATH)
-                )
-                self.interpreter.allocate_tensors()
+        with self._inference_lock:
+            if self.interpreter is not None:
+                return
 
-                self.input_details = self.interpreter.get_input_details()
-                self.output_details = self.interpreter.get_output_details()
+            if BINARY_MODEL_PATH.exists():
+                try:
+                    interpreter = Interpreter(
+                        model_path=str(BINARY_MODEL_PATH)
+                    )
+                    interpreter.allocate_tensors()
 
+                    self.interpreter = interpreter
+                    self.input_details = interpreter.get_input_details()
+                    self.output_details = interpreter.get_output_details()
+
+                    print(
+                        f"[BinaryGate] Successfully loaded Stage 1 LiteRT model "
+                        f"from {BINARY_MODEL_PATH}"
+                    )
+
+                except Exception as e:
+                    print(f"[BinaryGate] Error loading LiteRT model: {e}")
+                    self.interpreter = None
+
+            else:
                 print(
-                    f"[BinaryGate] Successfully loaded Stage 1 LiteRT model "
-                    f"from {BINARY_MODEL_PATH}"
+                    f"[BinaryGate] Warning: Model file "
+                    f"{BINARY_MODEL_PATH} not found."
                 )
 
-            except Exception as e:
-                print(f"[BinaryGate] Error loading LiteRT model: {e}")
-                self.interpreter = None
+            if BINARY_METADATA_PATH.exists():
+                try:
+                    with open(BINARY_METADATA_PATH, "r", encoding="utf-8") as f:
+                        meta = json.load(f)
 
-        else:
-            print(
-                f"[BinaryGate] Warning: Model file "
-                f"{BINARY_MODEL_PATH} not found."
-            )
+                    self.threshold = meta.get(
+                        "confidence_threshold",
+                        TOMATO_CONFIDENCE_THRESHOLD,
+                    )
 
-        if BINARY_METADATA_PATH.exists():
-            try:
-                with open(BINARY_METADATA_PATH, "r", encoding="utf-8") as f:
-                    meta = json.load(f)
-
-                self.threshold = meta.get(
-                    "confidence_threshold",
-                    TOMATO_CONFIDENCE_THRESHOLD,
-                )
-
-            except Exception as e:
-                print(f"[BinaryGate] Note loading metadata: {e}")
+                except Exception as e:
+                    print(f"[BinaryGate] Note loading metadata: {e}")
 
     def verify_tomato(self, pil_img: Image.Image) -> Dict[str, Any]:
         """
@@ -89,16 +100,17 @@ class TomatoBinaryGateService:
             # Ensure NumPy float32 input.
             tensor = np.asarray(tensor, dtype=np.float32)
 
-            self.interpreter.set_tensor(
-                self.input_details[0]["index"],
-                tensor,
-            )
+            with self._inference_lock:
+                self.interpreter.set_tensor(
+                    self.input_details[0]["index"],
+                    tensor,
+                )
 
-            self.interpreter.invoke()
+                self.interpreter.invoke()
 
-            output = self.interpreter.get_tensor(
-                self.output_details[0]["index"]
-            )
+                output = self.interpreter.get_tensor(
+                    self.output_details[0]["index"]
+                )
 
             prob = float(output[0][0])
 

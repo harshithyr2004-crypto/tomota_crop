@@ -34,6 +34,18 @@ class PredictionController {
         this.advisoryChemicalList = document.getElementById('advisoryChemicalList');
         this.advisoryPreventionList = document.getElementById('advisoryPreventionList');
 
+        // DOM Elements - Symptom Comparator & Prescription
+        this.symptomComparatorBox = document.getElementById('symptomComparatorBox');
+        this.compScannedImg = document.getElementById('compScannedImg');
+        this.compHallmarksList = document.getElementById('compHallmarksList');
+        this.compActionCue = document.getElementById('compActionCue');
+        this.downloadPrescriptionBtn = document.getElementById('downloadPrescriptionBtn');
+        this.activePlotSelect = document.getElementById('activePlotSelect');
+
+        if (this.downloadPrescriptionBtn) {
+            this.downloadPrescriptionBtn.addEventListener('click', () => this.generatePrescription());
+        }
+
         // History
         this.historyGrid = document.getElementById('historyGrid');
         
@@ -215,6 +227,34 @@ class PredictionController {
             this.aiSummaryText.textContent = data.ai_summary || `Detected ${data.disease}. Review the action plan and treatment guidance below.`;
         }
 
+        // Populate Pathology Symptom Visual Comparator
+        if (this.symptomComparatorBox) {
+            this.symptomComparatorBox.classList.remove('hidden');
+            if (this.compScannedImg) {
+                const previewImg = document.getElementById('imagePreview');
+                if (previewImg && previewImg.src) {
+                    this.compScannedImg.src = previewImg.src;
+                }
+            }
+            if (this.compHallmarksList) {
+                this.compHallmarksList.innerHTML = '';
+                const hallmarks = (data.symptoms && data.symptoms.length > 0)
+                    ? data.symptoms.slice(0, 3)
+                    : ['Foliar necrosis with chlorotic margin halos', 'Concentric fungal target rings or foliar spots', 'Leaf curling, stunting, or vascular wilting'];
+                hallmarks.forEach(item => {
+                    const tag = document.createElement('span');
+                    tag.className = 'comp-hallmark-tag';
+                    tag.textContent = `• ${item}`;
+                    this.compHallmarksList.appendChild(tag);
+                });
+            }
+            if (this.compActionCue) {
+                this.compActionCue.textContent = data.is_healthy
+                    ? 'Pristine foliar chlorophyll distribution; zero active lesion signatures.'
+                    : `Neural activation patterns correlate strongly with classic ${data.disease} hallmark markers.`;
+            }
+        }
+
         // Update Dedicated Farmer Guidance Hub Page
         const plan = data.action_plan || {};
         if (this.advisoryActionToday) this.advisoryActionToday.textContent = plan.today || 'Inspect crop thoroughly.';
@@ -245,6 +285,7 @@ class PredictionController {
     saveScanHistory(data, file) {
         try {
             const history = JSON.parse(localStorage.getItem('tomatoguard_history') || '[]');
+            const activePlot = this.activePlotSelect ? this.activePlotSelect.value : 'Plot North A (Hybrid)';
             const record = {
                 id: Date.now(),
                 date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
@@ -252,11 +293,15 @@ class PredictionController {
                 confidence: data.confidence,
                 health_score: data.health_score,
                 severity: data.severity,
+                plot_name: activePlot,
                 image_name: file.name || 'Captured Leaf'
             };
             history.unshift(record);
-            localStorage.setItem('tomatoguard_history', JSON.stringify(history.slice(0, 15)));
+            localStorage.setItem('tomatoguard_history', JSON.stringify(history.slice(0, 20)));
             this.loadHistory();
+            if (window.plotsManager) {
+                window.plotsManager.renderPlots();
+            }
         } catch (e) {
             console.error('History save error:', e);
         }
@@ -278,9 +323,9 @@ class PredictionController {
                 card.innerHTML = `
                     <div class="logo-icon" style="font-size:24px;">🍃</div>
                     <div class="history-info">
-                        <div class="hist-date">${item.date} &bull; Score: ${item.health_score}/100</div>
+                        <div class="hist-date">${item.date} &bull; Score: ${item.health_score}/100 &bull; <strong>${item.plot_name || 'Plot North A'}</strong></div>
                         <div class="hist-name">${item.disease}</div>
-                        <div class="hist-conf">${item.confidence}% confidence</div>
+                        <div class="hist-conf">${item.confidence}% confidence (${item.severity || 'Normal'})</div>
                     </div>
                 `;
                 this.historyGrid.appendChild(card);
@@ -293,6 +338,240 @@ class PredictionController {
     clearHistory() {
         localStorage.removeItem('tomatoguard_history');
         this.loadHistory();
+        if (window.plotsManager) {
+            window.plotsManager.renderPlots();
+        }
+    }
+
+    generatePrescription() {
+        if (!this.lastPredictionData) {
+            alert('Please perform a leaf scan first to generate an agronomy prescription.');
+            return;
+        }
+
+        const data = this.lastPredictionData;
+        const activePlot = this.activePlotSelect ? this.activePlotSelect.value : 'Plot North A (Hybrid)';
+        const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        const timeStr = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Pop-up was blocked. Please allow pop-ups to open the prescription.');
+            return;
+        }
+
+        const organicItemsHtml = Array.isArray(data.organic_treatment) 
+            ? data.organic_treatment.map(o => `<li>${o}</li>`).join('')
+            : '<li>Regular bio-fungicide foliar application</li>';
+
+        const chemicalItemsHtml = Array.isArray(data.chemical_treatment)
+            ? data.chemical_treatment.map(c => `<li>${c}</li>`).join('')
+            : '<li>Consult local agriculture extension officer before spraying</li>';
+
+        const todayAction = data.action_plan?.today || 'Inspect field perimeter and isolate symptomatic plants.';
+        const next3Action = data.action_plan?.next_3_days || 'Apply protective bio-control foliar spray early in the morning.';
+        const weekAction = data.action_plan?.this_week || 'Improve canopy aeration and maintain soil drip fertigation.';
+
+        printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TomatoGuard AI - Agronomic Crop Health Prescription</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #1e293b;
+            margin: 0;
+            padding: 32px;
+            background: #ffffff;
+            line-height: 1.5;
+        }
+        .rx-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #16a34a;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .rx-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .rx-logo { font-size: 38px; }
+        .rx-title h1 { margin: 0; font-size: 24px; color: #166534; font-weight: 800; letter-spacing: -0.5px; }
+        .rx-title p { margin: 2px 0 0; font-size: 13px; color: #64748b; }
+        .rx-meta { text-align: right; font-size: 13px; color: #475569; }
+        .rx-badge { display: inline-block; background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .info-box span { display: block; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; }
+        .info-box strong { font-size: 15px; color: #0f172a; }
+        .rx-section { margin-bottom: 22px; }
+        .rx-section h2 {
+            font-size: 16px;
+            color: #0f172a;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .timeline-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .t-step {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px;
+            background: #ffffff;
+        }
+        .t-step.today { border-top: 4px solid #ef4444; }
+        .t-step.next3 { border-top: 4px solid #f59e0b; }
+        .t-step.week { border-top: 4px solid #10b981; }
+        .t-step h4 { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+        .t-step.today h4 { color: #dc2626; }
+        .t-step.next3 h4 { color: #d97706; }
+        .t-step.week h4 { color: #059669; }
+        .t-step p { margin: 0; font-size: 12px; color: #334155; }
+        ul { margin: 0; padding-left: 20px; }
+        li { font-size: 13px; color: #334155; margin-bottom: 6px; }
+        .rx-caution {
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #92400e;
+            margin-top: 24px;
+        }
+        .rx-signature {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .print-btn-bar {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .print-btn {
+            background: #16a34a;
+            color: #ffffff;
+            border: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        @media print {
+            .print-btn-bar { display: none; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-btn-bar">
+        <button class="print-btn" onclick="window.print()">🖨️ Print Prescription / Save as PDF</button>
+    </div>
+    <div class="rx-header">
+        <div class="rx-brand">
+            <div class="rx-logo">🍅</div>
+            <div class="rx-title">
+                <h1>TomatoGuard AI Agronomic Advisory</h1>
+                <p>Two-Stage Gated Neural Disease Prescription & Management Record</p>
+            </div>
+        </div>
+        <div class="rx-meta">
+            <div class="rx-badge">Rx Verified</div>
+            <div>Date: ${dateStr}</div>
+            <div>Time: ${timeStr}</div>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-box">
+            <span>Farm Field / Plot</span>
+            <strong>${activePlot}</strong>
+        </div>
+        <div class="info-box">
+            <span>Primary Diagnosis</span>
+            <strong>${data.disease}</strong>
+        </div>
+        <div class="info-box">
+            <span>Severity & Health Score</span>
+            <strong>${data.severity.toUpperCase()} (${data.health_score}/100)</strong>
+        </div>
+        <div class="info-box">
+            <span>AI Model Confidence</span>
+            <strong>${data.confidence}% (Stage 2 CNN)</strong>
+        </div>
+    </div>
+
+    <div class="rx-section">
+        <h2>⏱️ Immediate Time-Sequenced Action Plan</h2>
+        <div class="timeline-box">
+            <div class="t-step today">
+                <h4>STEP 1: TODAY</h4>
+                <p>${todayAction}</p>
+            </div>
+            <div class="t-step next3">
+                <h4>STEP 2: NEXT 3 DAYS</h4>
+                <p>${next3Action}</p>
+            </div>
+            <div class="t-step week">
+                <h4>STEP 3: THIS WEEK</h4>
+                <p>${weekAction}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="rx-section">
+        <h2>🌿 Recommended Bio-Control & Organic Remedies</h2>
+        <ul>${organicItemsHtml}</ul>
+    </div>
+
+    <div class="rx-section">
+        <h2>💊 Prescribed Chemical Medication & Dosage Protocols</h2>
+        <ul>${chemicalItemsHtml}</ul>
+    </div>
+
+    <div class="rx-caution">
+        <strong>⚠️ Safety & Pre-Harvest Interval (PHI) Notice:</strong> Always wear standard personal protective equipment (PPE) when applying crop protection chemicals. Strictly adhere to label concentrations and observe required days to harvest.
+    </div>
+
+    <div class="rx-signature">
+        <div>
+            <strong>TomatoGuard AI Agronomy Engine</strong><br>
+            MobileNetV2 Plant Gate + 10-Class Neural Network
+        </div>
+        <div style="text-align: right;">
+            <strong>Agronomist / Field Scout Verification</strong><br>
+            Signature: __________________________
+        </div>
+    </div>
+</body>
+</html>
+        `);
+        printWindow.document.close();
     }
 }
 

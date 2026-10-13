@@ -6,8 +6,10 @@ Supports Full Multilingual Localization for 10 Indian Languages
 """
 
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
-from typing import Optional
+from starlette.concurrency import run_in_threadpool
+from typing import Any, Dict, Optional
 
+from app.core.config import MAX_FILE_SIZE_MB
 from app.utils.image_processing import load_image_from_bytes
 from app.services.quality_service import quality_service_instance
 from app.services.binary_service import binary_service_instance
@@ -18,40 +20,16 @@ from app.data.disease_info import DISEASE_CATALOG
 
 router = APIRouter()
 
-@router.post("/predict")
-async def diagnose_crop_image(
-    file: UploadFile = File(...),
-    target_language: Optional[str] = Form("en")
-):
-    """
-    Two-Stage Prediction Endpoint:
-    1. Validates Image Quality (Resolution, Darkness, Corruption).
-    2. Stage 1 Binary Gate (MobileNetV2: Tomato vs Non-Tomato / Other Crops).
-    3. Stage 2 Disease Classifier (Runs ONLY IF Tomato Authenticity is Verified).
-    4. Automatically translates output to selected Indian language.
-    """
-    lang = (target_language or "en").strip().lower()
 
-    # 1. File Type Validation
-    if file.filename:
-        ext = file.filename.split(".")[-1].lower()
-        if ext not in ["jpg", "jpeg", "png", "webp"]:
-            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload JPG, JPEG, PNG, or WEBP.")
-
-    try:
-        contents = await file.read()
-        if not contents or len(contents) == 0:
-            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read file: {e}")
-
-    # 2. Image Loading & Integrity Check
+def _process_prediction(contents: bytes, lang: str) -> Dict[str, Any]:
     try:
         pil_img = load_image_from_bytes(contents)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail="Corrupted or unreadable image file. Please provide a valid image.")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="Corrupted or unreadable image file. Please provide a valid image.",
+        ) from exc
 
-    # 3. Step 1: Quality Assessment
     quality_passed, quality_report = quality_service_instance.assess_quality(pil_img)
     if not quality_passed:
         raw_msg = "⚠️ Image quality is too low."
@@ -65,15 +43,15 @@ async def diagnose_crop_image(
             "suggestion": translation_service_instance.translate(raw_sug, lang)
         }
 
-    # 4. Step 2: Stage 1 Tomato Verification Gate (MobileNetV2)
     gate_result = binary_service_instance.verify_tomato(pil_img)
+    if gate_result.get("error"):
+        raise HTTPException(
+            status_code=503,
+            detail="Tomato verification is temporarily unavailable.",
+        )
+
     is_tomato = gate_result["is_tomato"]
     tomato_confidence = gate_result["tomato_confidence"]
-
-    # =========================================================================
-    # CRITICAL GATE SAFETY: Non-Tomato & other-crop images STOP HERE immediately!
-    # Disease prediction is NEVER executed for non-tomato images.
-    # =========================================================================
     if not is_tomato:
         raw_msg = "⚠️ This image does not appear to belong to the tomato crop."
         raw_sug = "Please upload or capture a clear tomato leaf image. Disease diagnosis requires a verified tomato crop leaf."
@@ -87,8 +65,13 @@ async def diagnose_crop_image(
             "suggestion": translation_service_instance.translate(raw_sug, lang)
         }
 
-    # 5. Step 3 & 4: Stage 2 Disease Detection & Farmer Guidance
     disease_result = disease_service_instance.diagnose(pil_img, tomato_conf=tomato_confidence)
+    if disease_result.get("error"):
+        raise HTTPException(
+            status_code=503,
+            detail="Disease diagnosis is temporarily unavailable.",
+        )
+
     disease_info = DISEASE_CATALOG.get(disease_result.get("raw_class"), disease_result)
     ai_summary = genai_service_instance.generate_response(
         query=(
@@ -100,7 +83,6 @@ async def diagnose_crop_image(
         language=lang,
     )
 
-    # Localize response if target language is requested
     disease_name = disease_result["common_name"]
     symptoms = disease_result["symptoms"]
     organic_treatment = disease_result["organic_treatment"]
@@ -143,5 +125,43 @@ async def diagnose_crop_image(
         "prevention": prevention,
         "action_plan": action_plan,
         "top_predictions": disease_result.get("top_predictions", []),
+        "confidence_guidance": disease_result.get("confidence_guidance", {}),
         "ai_summary": ai_summary
     }
+
+
+@router.post("/predict")
+async def diagnose_crop_image(
+    file: UploadFile = File(...),
+    target_language: Optional[str] = Form("en")
+):
+    """
+    Two-Stage Prediction Endpoint:
+    1. Validates Image Quality (Resolution, Darkness, Corruption).
+    2. Stage 1 Binary Gate (MobileNetV2: Tomato vs Non-Tomato / Other Crops).
+    3. Stage 2 Disease Classifier (Runs ONLY IF Tomato Authenticity is Verified).
+    4. Automatically translates output to selected Indian language.
+    """
+    lang = (target_language or "en").strip().lower()
+
+    # 1. File Type Validation
+    if file.filename:
+        ext = file.filename.split(".")[-1].lower()
+        if ext not in ["jpg", "jpeg", "png", "webp"]:
+            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload JPG, JPEG, PNG, or WEBP.")
+
+    max_upload_bytes = int(MAX_FILE_SIZE_MB * 1024 * 1024)
+    try:
+        contents = await file.read(max_upload_bytes + 1)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Failed to read uploaded file.") from exc
+
+    if not contents:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    if len(contents) > max_upload_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Image exceeds the {MAX_FILE_SIZE_MB:g} MB upload limit.",
+        )
+
+    return await run_in_threadpool(_process_prediction, contents, lang)

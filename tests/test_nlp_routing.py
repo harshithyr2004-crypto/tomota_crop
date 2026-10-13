@@ -73,3 +73,18 @@ def test_whitefly_question_uses_pest_guidance_not_scan_disease(monkeypatch):
     assert result["context_disease"] == "General tomato care"
     assert "whiteflies on tomatoes" in result["response"].lower()
     assert "early blight" not in result["response"].lower()
+
+
+def test_assistant_uses_legacy_response_when_genai_returns_empty(monkeypatch):
+    monkeypatch.setattr(
+        genai_service_instance,
+        "generate_response",
+        lambda **_kwargs: "",
+    )
+
+    result = assistant_service_instance.answer_query(
+        "How can I prevent Early Blight?",
+        current_disease="Tomato___Early_blight",
+    )
+
+    assert "Prevention Protocol for Early Blight" in result["response"]

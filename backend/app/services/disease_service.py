@@ -1,10 +1,11 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Stage 2: 10-Class Tomato Leaf Disease Classification & Advisory Service
 LiteRT version for Vercel deployment.
 """
 
 import numpy as np
+import threading
 from PIL import Image
 from typing import Dict, Any
 
@@ -20,33 +21,43 @@ class TomatoDiseaseClassifierService:
         self.interpreter = None
         self.input_details = None
         self.output_details = None
+        self._inference_lock = threading.Lock()
         self._load_model()
 
+    @property
+    def model(self):
+        return self.interpreter
+
     def _load_model(self):
-        if DISEASE_MODEL_PATH.exists():
-            try:
-                self.interpreter = Interpreter(
-                    model_path=str(DISEASE_MODEL_PATH)
-                )
-                self.interpreter.allocate_tensors()
+        with self._inference_lock:
+            if self.interpreter is not None:
+                return
 
-                self.input_details = self.interpreter.get_input_details()
-                self.output_details = self.interpreter.get_output_details()
+            if DISEASE_MODEL_PATH.exists():
+                try:
+                    interpreter = Interpreter(
+                        model_path=str(DISEASE_MODEL_PATH)
+                    )
+                    interpreter.allocate_tensors()
 
+                    self.interpreter = interpreter
+                    self.input_details = interpreter.get_input_details()
+                    self.output_details = interpreter.get_output_details()
+
+                    print(
+                        f"[DiseaseService] Successfully loaded Stage 2 "
+                        f"LiteRT model from {DISEASE_MODEL_PATH}"
+                    )
+
+                except Exception as e:
+                    print(f"[DiseaseService] Error loading LiteRT model: {e}")
+                    self.interpreter = None
+
+            else:
                 print(
-                    f"[DiseaseService] Successfully loaded Stage 2 "
-                    f"LiteRT model from {DISEASE_MODEL_PATH}"
+                    f"[DiseaseService] Warning: Model file "
+                    f"{DISEASE_MODEL_PATH} not found."
                 )
-
-            except Exception as e:
-                print(f"[DiseaseService] Error loading LiteRT model: {e}")
-                self.interpreter = None
-
-        else:
-            print(
-                f"[DiseaseService] Warning: Model file "
-                f"{DISEASE_MODEL_PATH} not found."
-            )
 
     def calculate_health_score(
         self,
@@ -72,6 +83,45 @@ class TomatoDiseaseClassifierService:
 
         return max(15, min(75, score))
 
+    @staticmethod
+    def explain_confidence(
+        predictions: list,
+        action_plan: Dict[str, Any],
+        severity: str,
+        is_healthy: bool,
+    ) -> Dict[str, Any]:
+        """Explain model confidence as a ranking signal, not a probability guarantee."""
+        confidence = predictions[0]["confidence"] if predictions else 0.0
+        runner_up = predictions[1]["confidence"] if len(predictions) > 1 else 0.0
+        margin = round(confidence - runner_up, 2)
+
+        if confidence >= 80 and margin >= 20:
+            level = "Strong match"
+            summary = "The leading class is clearly ahead in this model result. Confidence is not a guarantee."
+            next_step = action_plan.get("today", "Inspect the plant and follow the recommended care plan.")
+        elif confidence < 55 or margin < 10:
+            level = "Needs a closer look"
+            summary = "The model is uncertain or the leading classes are close; do not rely on this result alone."
+            next_step = "Check the symptoms against the guidance and rescan a clear leaf in even natural light."
+        else:
+            level = "Possible match"
+            summary = "This is the leading model result, but other classes remain plausible."
+            next_step = action_plan.get("today", "Inspect the plant and compare the visible symptoms.")
+
+        if not is_healthy and severity in {"High", "Critical"}:
+            next_step = (
+                "Inspect affected plants promptly and seek local agricultural guidance if symptoms are spreading. "
+                + next_step
+            )
+
+        return {
+            "level": level,
+            "summary": summary,
+            "next_step": next_step,
+            "runner_up_margin": margin,
+            "is_uncertain": level == "Needs a closer look",
+        }
+
     def diagnose(
         self,
         pil_img: Image.Image,
@@ -91,16 +141,17 @@ class TomatoDiseaseClassifierService:
             tensor = preprocess_for_disease_cnn(pil_img)
             tensor = np.asarray(tensor, dtype=np.float32)
 
-            self.interpreter.set_tensor(
-                self.input_details[0]["index"],
-                tensor
-            )
+            with self._inference_lock:
+                self.interpreter.set_tensor(
+                    self.input_details[0]["index"],
+                    tensor
+                )
 
-            self.interpreter.invoke()
+                self.interpreter.invoke()
 
-            preds = self.interpreter.get_tensor(
-                self.output_details[0]["index"]
-            )[0]
+                preds = self.interpreter.get_tensor(
+                    self.output_details[0]["index"]
+                )[0]
 
             top_idx = int(np.argmax(preds))
             top_prob = float(preds[top_idx])
@@ -174,6 +225,12 @@ class TomatoDiseaseClassifierService:
                 confidence_pct,
                 tomato_conf
             )
+            confidence_guidance = self.explain_confidence(
+                breakdown,
+                info.get("action_plan", {}),
+                info["severity"],
+                is_healthy,
+            )
 
             return {
                 "raw_class": top_raw_class,
@@ -198,6 +255,7 @@ class TomatoDiseaseClassifierService:
                     "action_plan",
                     {}
                 ),
+                "confidence_guidance": confidence_guidance,
                 "disclaimer": (
                     "AI-based indication for agronomy assistance. "
                     "Consult a certified local agricultural specialist "

@@ -152,6 +152,26 @@ tomato-ai-system/
 
 ---
 
+## ⚙️ Runtime Performance & Reliability
+
+- Image uploads are limited to 15 MB, with matching browser-side validation before preview or upload.
+- Image decoding, model inference, and optional external AI requests run outside the FastAPI event loop so slow inference does not stall unrelated requests.
+- LiteRT interpreters are shared between requests and synchronized during inference to prevent concurrent tensor access from mixing predictions.
+- If a required model is unavailable, the diagnosis API returns a service-unavailable response instead of treating the model failure as a valid non-tomato result.
+- The assistant builds its legacy rule-based answer only when the GenAI service has no response.
+
+## 🌱 Field Pulse & Explainable Scans
+
+The Scan Records page now summarizes recent checks saved in the browser, plots the last seven health scores, highlights follow-up guidance, and exports a CSV report. Saved scans can be reopened without running the models again. The chart explicitly treats scores from separate photos as indicative, not a field-wide trend, and prompts a comparable recheck before interpreting a sharp score change.
+
+Each diagnosis also compares the leading class with the runner-up, presents a plain-language confidence tier and next step, and uses uncertain results to prioritize symptom review and a clearer rescan. Model scores are not presented as calibrated probabilities or confirmed diagnoses.
+
+## 🗓️ Local-First Tomato Fieldbook
+
+The Fieldbook supports up to 20 named plots per local profile, optional area and location notes, planting dates, editable crop stages, and a stage-aware two-week observation checklist. Farmers can add their own dated tasks, mark them complete, and see overdue or upcoming reminders. New diagnoses are associated with the active plot in local scan history; they are not uploaded to the server as plot records.
+
+Plot names, notes, crop stages, and tasks are stored in the current browser's local storage, scoped to the signed-in local profile. They do not sync between devices or to a server and are not protected as server-side account data. Checklist items are general crop-care prompts, not weather-derived schedules or pesticide instructions; local conditions and agricultural extension guidance take precedence.
+
 ## ⚡ Quick Start & Running the Project
 
 ### **1. Launch Unified Full-Stack Application (Backend + Frontend)**

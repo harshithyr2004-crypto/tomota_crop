@@ -1,4 +1,4 @@
-﻿import os
+import os
 from pathlib import Path
 
 # Base Paths (Points to D:\tomato_crop\tomato-ai-system)
@@ -18,8 +18,10 @@ DISEASE_ARCHIVE_MODEL_PATH = Path(r"D:\archive\tomato\tomato_disease_model.keras
 DISEASE_WEIGHTS_PATH = Path(r"D:\archive\tomato\keras_potato_trained_model_weights.weights.h5")
 
 # Datasets
-VAL_DATASET_DIR = Path(r"D:\archive\tomato\val")
-TRAIN_DATASET_DIR = Path(r"D:\archive\tomato\train")
+_local_val = PROJECT_ROOT.parent.parent / "archive" / "tomato" / "val"
+_local_train = PROJECT_ROOT.parent.parent / "archive" / "tomato" / "train"
+VAL_DATASET_DIR = _local_val if _local_val.exists() else Path(r"D:\archive\tomato\val")
+TRAIN_DATASET_DIR = _local_train if _local_train.exists() else Path(r"D:\archive\tomato\train")
 
 # Static Frontend
 STATIC_FRONTEND_DIR = BASE_DIR / "frontend"

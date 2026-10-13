@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=60">
 </head>
 <body>
     <!-- Background Ambient Light Glows -->
@@ -44,9 +44,18 @@
                 <button type="button" class="nav-link" data-target="page-catalog">
                     <span class="nav-icon">📚</span> <span>Disease Library</span>
                 </button>
+                <button type="button" class="nav-link" data-target="page-plots">
+                    <span class="nav-icon">🏡</span> <span>Farm Plots</span>
+                </button>
             </nav>
             
             <div class="nav-controls">
+                <!-- Dual AI Online Status -->
+                <div class="engine-status-pill" id="engineStatusPill" title="Two-Stage AI Inference Pipeline Online">
+                    <span class="pulse-indicator"></span>
+                    <span class="engine-text">Dual AI Online</span>
+                </div>
+
                 <!-- Language Selector -->
                 <div class="language-picker-wrapper">
                     <span class="lang-icon">🌐</span>
@@ -143,6 +152,86 @@
         <!-- ----------------------------------------------------------------- -->
         <div class="app-page active" id="page-scanner">
             <div class="container">
+                <!-- REAL-TIME LIVE WEATHER & RAIN FORECAST CARD (OVER TWO-STAGE PIPELINE) -->
+                <div class="live-weather-card glass-panel" id="liveWeatherCard">
+                    <div class="weather-card-header">
+                        <div class="weather-header-left">
+                            <span class="weather-card-icon" id="weatherIcon">⛅</span>
+                            <div>
+                                <h3 class="weather-card-title">Live Farm Weather & Rain Intel</h3>
+                                <div class="weather-location-row">
+                                    <span class="location-pin">📍</span>
+                                    <span class="location-name" id="weatherLocationName">Kolar, Karnataka</span>
+                                    <button type="button" class="btn-geo-detect" id="btnDetectLocation" title="Detect Farm GPS Location">📡 Auto-Detect</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="weather-header-right">
+                            <button type="button" class="btn-weather-refresh" id="btnRefreshWeather" title="Refresh Live Weather">🔄</button>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Temperature & Rain Callout -->
+                    <div class="weather-highlight-box">
+                        <div class="temp-display-group">
+                            <div class="temp-current-val">
+                                <span id="currentTempDisplay">--</span><span class="temp-unit">°C</span>
+                            </div>
+                            <div class="temp-sub-info">
+                                <span class="weather-cond-text" id="weatherConditionText">Loading real-time weather...</span>
+                                <span class="temp-range-text" id="tempRangeText">Max: --°C • Min: --°C</span>
+                            </div>
+                        </div>
+
+                        <!-- Is It Going To Rain Today Status -->
+                        <div class="rain-status-pill" id="rainStatusPill">
+                            <div class="rain-pill-badge" id="rainPillBadge">Checking Rain...</div>
+                            <div class="rain-chance-text" id="rainChanceText">Precipitation probability: --%</div>
+                        </div>
+                    </div>
+
+                    <!-- Agronomic Spraying & Rain Advisory Banner -->
+                    <div class="rain-advisory-banner" id="rainAdvisoryBanner">
+                        <span class="rain-adv-icon" id="rainAdvIcon">🌱</span>
+                        <div class="rain-adv-body">
+                            <strong id="rainAdvHeading">Farm Spraying & Irrigation Window</strong>
+                            <p id="rainAdvText">Fetching real-time precipitation forecast...</p>
+                        </div>
+                    </div>
+
+                    <!-- Live Micro-Climate Grid -->
+                    <div class="weather-metrics-grid">
+                        <div class="w-metric-cell">
+                            <span class="w-metric-icon">🌧️</span>
+                            <div class="w-metric-info">
+                                <span class="w-metric-val" id="weatherRainSum">0.0 mm</span>
+                                <span class="w-metric-lbl">Expected Rain</span>
+                            </div>
+                        </div>
+                        <div class="w-metric-cell">
+                            <span class="w-metric-icon">💧</span>
+                            <div class="w-metric-info">
+                                <span class="w-metric-val" id="weatherHumidity">--%</span>
+                                <span class="w-metric-lbl">Relative Humidity</span>
+                            </div>
+                        </div>
+                        <div class="w-metric-cell">
+                            <span class="w-metric-icon">💨</span>
+                            <div class="w-metric-info">
+                                <span class="w-metric-val" id="weatherWind">-- km/h</span>
+                                <span class="w-metric-lbl">Wind Speed</span>
+                            </div>
+                        </div>
+                        <div class="w-metric-cell">
+                            <span class="w-metric-icon">☁️</span>
+                            <div class="w-metric-info">
+                                <span class="w-metric-val" id="weatherClouds">--%</span>
+                                <span class="w-metric-lbl">Cloud Cover</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Hero Intro Banner -->
                 <section class="hero-section">
                     <div class="hero-badge">🛡️ Two-Stage Gated Neural Pipeline</div>
@@ -195,6 +284,16 @@
                             <div class="card-header">
                                 <h2><span class="icon">📷</span> Leaf Image Scanner</h2>
                                 <span class="chip">MobileNetV2 + CNN</span>
+                            </div>
+
+                            <!-- Active Farm Plot Tagging Row -->
+                            <div class="active-plot-badge-row">
+                                <span class="plot-icon">📍 Active Plot:</span>
+                                <select id="activePlotSelect" class="active-plot-select" title="Assign scans to farm plot">
+                                    <option value="Plot North A (Hybrid)">Plot North A (Hybrid)</option>
+                                    <option value="Plot South B (Organic)">Plot South B (Organic)</option>
+                                    <option value="Greenhouse 1">Greenhouse 1</option>
+                                </select>
                             </div>
 
                             <!-- Scanner Mode Switch -->
@@ -257,6 +356,7 @@
                                 </div>
                             </div>
                         </section>
+
                     </div>
 
                     <!-- Right: Results Card -->
@@ -347,20 +447,48 @@
                                     <div class="prob-list" id="probList"></div>
                                 </div>
 
+                                <!-- Interactive Symptom Visual Comparator -->
+                                <div class="symptom-comparator-box" id="symptomComparatorBox">
+                                    <div class="comparator-header">
+                                        <h4><span class="icon">🔬</span> Pathology Visual Comparator</h4>
+                                        <span class="comp-badge">Side-by-Side Verification</span>
+                                    </div>
+                                    <div class="comparator-body">
+                                        <div class="comp-img-wrapper">
+                                            <span class="comp-img-label">Your Scanned Leaf</span>
+                                            <img id="compScannedImg" src="" alt="Scanned leaf sample">
+                                        </div>
+                                        <div class="comp-ref-card">
+                                            <span class="comp-img-label">Reference Pathological Hallmarks</span>
+                                            <div class="comp-hallmarks-list" id="compHallmarksList">
+                                                <!-- Populated dynamically -->
+                                            </div>
+                                            <div class="comp-action-cue" id="compActionCue">
+                                                Matched characteristic symptoms from Stage 2 neural feature maps.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- GenAI Diagnosis Summary -->
                                 <div class="ai-summary-box">
                                     <strong>AI Diagnosis Summary</strong>
                                     <p id="aiSummaryText">Generating a crop health summary...</p>
                                 </div>
 
-                                <!-- Quick Navigation Link to Guidance Page -->
+                                <!-- Quick Navigation Link to Guidance Page & Printable Prescription -->
                                 <div class="quick-guidance-banner">
-                                    <div>
+                                    <div style="flex: 1;">
                                         <strong>Full Advisory Generated:</strong> Complete symptoms, organic/chemical treatment, and farmer action timeline are ready.
                                     </div>
-                                    <button type="button" class="btn btn-secondary btn-sm" id="viewFullAdvisoryBtn">
-                                        View Farmer Guidance ➔
-                                    </button>
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                        <button type="button" class="btn btn-secondary btn-sm" id="viewFullAdvisoryBtn">
+                                            View Farmer Guidance ➔
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-sm" id="downloadPrescriptionBtn">
+                                            📄 Download Agronomic Prescription
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -383,6 +511,25 @@
                         Comprehensive organic remedies, responsible chemical medications, and time-sequenced farmer action schedules.
                     </p>
                 </section>
+
+                <!-- Voice Spoken Advisory (TTS) -->
+                <div class="tts-audio-banner glass-panel">
+                    <div class="tts-info">
+                        <span class="tts-icon">🔊</span>
+                        <div>
+                            <strong>Spoken Audio Guidance (Hands-Free Field Mode)</strong>
+                            <p>Listen to step-by-step organic remedies and chemical schedules while working in your field.</p>
+                        </div>
+                    </div>
+                    <div class="tts-controls">
+                        <button type="button" class="btn btn-secondary btn-sm" id="speakAdvisoryBtn">
+                            <span>▶️ Play Spoken Guidance</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm hidden" id="stopAudioBtn">
+                            <span>⏹️ Stop Audio</span>
+                        </button>
+                    </div>
+                </div>
 
                 <div class="advisory-page-grid">
                     <!-- Action Plan Timeline Card -->
@@ -461,38 +608,102 @@
         <div class="app-page" id="page-assistant">
             <div class="container">
                 <section class="assistant-page-card glass-panel">
-                    <div class="card-header">
-                        <h2><span class="icon">🤖</span> <span data-i18n="Ask TomatoGuard">Ask TomatoGuard AI Agronomy Assistant</span></h2>
-                        <span class="chip">AI Advisor</span>
+                    <div class="card-header assistant-header-flex">
+                        <div class="assistant-title-group">
+                            <h2><span class="icon">🤖</span> <span data-i18n="Ask TomatoGuard">Ask TomatoGuard AI Agronomy Assistant</span></h2>
+                            <span class="chip chip-status-pulse" id="aiStatusBadge">🟢 Free Cloud AI (Active)</span>
+                        </div>
+                        <button type="button" class="btn-ai-settings" id="openAiSettingsBtn" title="Configure AI Provider & Connect Keys">
+                            ⚙️ AI Settings / Connect Key
+                        </button>
                     </div>
                     <p class="page-header-desc">
-                        Ask any agricultural question regarding symptoms, organic solutions, fungicide spray schedules, or fertilizers.
+                        Ask any agricultural or general knowledge question regarding symptoms, organic solutions, fungicide spray schedules, fertilizers, weather impact, science, or outside inquiries.
                     </p>
 
                     <!-- Preset Question Chips -->
                     <div class="preset-chips-row">
                         <span class="chip-label">Quick Questions:</span>
+                        <button type="button" class="preset-chip">How to prevent Late Blight?</button>
                         <button type="button" class="preset-chip">How do I spray neem oil?</button>
                         <button type="button" class="preset-chip">What causes yellow leaves?</button>
-                        <button type="button" class="preset-chip">How to prevent Late Blight?</button>
-                        <button type="button" class="preset-chip">How to control whiteflies?</button>
+                        <button type="button" class="preset-chip">What is the capital of India?</button>
+                        <button type="button" class="preset-chip">How do plants make food in sunlight?</button>
+                        <button type="button" class="preset-chip">ಸಾವಯವ ಕೀಟನಾಶಕ ತಯಾರಿಸುವುದು ಹೇಗೆ?</button>
                     </div>
 
                     <!-- Chat Log Box -->
                     <div class="assistant-chat-box large-chat-box" id="assistantChatBox">
                         <div class="chat-message bot">
                             <div class="chat-bubble">
-                                <strong>TomatoGuard AI:</strong> Namaste Farmer! I am your dedicated AI Agronomy Assistant. Ask me anything about tomato crop disease identification, organic remedies, chemical sprays, or prevention practices.
+                                <strong>TomatoGuard AI:</strong> Namaste! I am your dedicated AI Agronomy Advisor &amp; Knowledge Assistant. Ask me anything about tomato crop disease identification, organic remedies, chemical sprays, prevention practices, or any general knowledge and science questions.
                             </div>
                         </div>
                     </div>
 
                     <!-- Input Form -->
                     <form class="assistant-input-row" id="assistantForm">
-                        <input type="text" id="assistantInput" class="assistant-input" placeholder="Type your crop question here (e.g. What fertilizer should I apply for yellow leaves?)" autocomplete="off">
+                        <button type="button" class="btn-voice-mic" id="voiceMicBtn" title="Speak query via voice microphone">🎤</button>
+                        <input type="text" id="assistantInput" class="assistant-input" placeholder="Ask any question (e.g. What fertilizer for yellow leaves? Or: What is the capital of India?)" autocomplete="off">
                         <button type="submit" class="btn-ask" id="assistantSubmitBtn">Send Query</button>
                     </form>
                 </section>
+
+                <!-- AI PROVIDER & API KEY SETTINGS MODAL -->
+                <div class="modal-overlay hidden" id="aiSettingsModal">
+                    <div class="modal-card glass-panel" style="max-width: 540px;">
+                        <div class="modal-header">
+                            <div class="modal-title-wrap">
+                                <h3>⚙️ Connect AI Key &amp; Settings</h3>
+                                <p class="modal-subtitle">Choose your AI provider or connect your own API key for unlimited smart answers</p>
+                            </div>
+                            <button type="button" class="btn-close-modal" id="closeAiSettingsBtn" title="Close Settings">✕</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="aiProviderSelect"><strong>AI Provider</strong></label>
+                                <select id="aiProviderSelect" class="form-select">
+                                    <option value="free_cloud">🌐 Free High-Performance Cloud AI (Zero-setup, No Key Needed)</option>
+                                    <option value="gemini">⚡ Google Gemini API (Recommended - Free Tier Available)</option>
+                                    <option value="openai">🧠 OpenAI API (GPT-4o / GPT-4o-mini)</option>
+                                    <option value="groq">🚀 Groq Cloud API (Ultra-Fast Llama-3.3)</option>
+                                    <option value="custom">🔧 Custom OpenAI-Compatible Endpoint</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="apiKeyGroup">
+                                <div class="form-label-row">
+                                    <label for="aiApiKeyInput"><strong>API Key</strong></label>
+                                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" id="getKeyLink" class="get-key-link">
+                                        Get Free Gemini Key ↗
+                                    </a>
+                                </div>
+                                <div class="input-with-button">
+                                    <input type="password" id="aiApiKeyInput" class="form-input" placeholder="Paste your API key here (e.g. AIzaSy... or sk-...)">
+                                    <button type="button" class="btn-icon-toggle" id="toggleApiKeyVisibility" title="Show/Hide Key">👁️</button>
+                                </div>
+                                <small class="form-hint" id="keyHint">Keys are securely saved in your local project .env file and never shared.</small>
+                            </div>
+
+                            <div class="form-group" id="modelGroup">
+                                <label for="aiModelInput"><strong>Model Name (Optional)</strong></label>
+                                <input type="text" id="aiModelInput" class="form-input" placeholder="Default: gemini-1.5-flash / gpt-4o-mini">
+                            </div>
+
+                            <div class="form-group hidden" id="customUrlGroup">
+                                <label for="aiBaseUrlInput"><strong>Base URL (Optional)</strong></label>
+                                <input type="text" id="aiBaseUrlInput" class="form-input" placeholder="https://api.openai.com/v1">
+                            </div>
+
+                            <div id="aiTestFeedback" class="test-feedback-box hidden"></div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn-modal-test" id="testAiKeyBtn">🧪 Test Connection</button>
+                            <button type="button" class="btn-modal-save" id="saveAiConfigBtn">💾 Save &amp; Connect</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -535,6 +746,27 @@
                 </section>
             </div>
         </div>
+
+        <!-- ----------------------------------------------------------------- -->
+        <!-- PAGE 6: FARM PLOTS & HARVEST FIELD TRACKER -->
+        <!-- ----------------------------------------------------------------- -->
+        <div class="app-page" id="page-plots">
+            <div class="container">
+                <section class="plots-page-card glass-panel">
+                    <div class="card-header">
+                        <div>
+                            <h2><span class="icon">🏡</span> Farm Plots & Field Health Tracker</h2>
+                            <p class="page-header-desc">Manage crop sections, track health scores across plots, and schedule follow-up scouting.</p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="addNewPlotBtn">+ Register New Plot</button>
+                    </div>
+                    
+                    <div class="plots-grid" id="plotsGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+            </div>
+        </div>
     </div>
 
     <!-- Application Footer -->
@@ -546,10 +778,10 @@
     </footer>
 
     <!-- Modular Script Inclusions -->
-    <script src="/static/js/translation.js?v=2"></script>
-    <script src="/static/js/auth.js?v=2"></script>
-    <script src="/static/js/camera.js?v=2"></script>
-    <script src="/static/js/prediction.js?v=2"></script>
-    <script src="/static/js/app.js?v=2"></script>
+    <script src="/static/js/translation.js?v=60"></script>
+    <script src="/static/js/auth.js?v=60"></script>
+    <script src="/static/js/camera.js?v=60"></script>
+    <script src="/static/js/prediction.js?v=60"></script>
+    <script src="/static/js/app.js?v=65"></script>
 </body>
 </html>
